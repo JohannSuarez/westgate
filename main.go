@@ -5,16 +5,24 @@ package main
 import (
 	"fmt"
 	"os"
-  "strings"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-var baseStyle = lipgloss.NewStyle().
-	BorderStyle(lipgloss.NormalBorder()).
-	BorderForeground(lipgloss.Color("240"))
+var (
+
+  tableStyle = lipgloss.NewStyle().
+    BorderStyle(lipgloss.NormalBorder()).
+    BorderForeground(lipgloss.Color("240"))
+
+  sidebarStyle = lipgloss.NewStyle().
+    BorderStyle(lipgloss.NormalBorder()).
+    BorderForeground(lipgloss.Color("205")).
+    Width(20) // Set a fixed width for the sidebar
+    
+)
 
 type model struct {
 	table table.Model
@@ -46,12 +54,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-/*
 func (m model) View() string {
-	return baseStyle.Render(m.table.View()) + "\n"
-}
-*/
+    // Render the table and sidebar individually with their styles
+    tableRendered := tableStyle.Render(m.table.View())
+    sidebarRendered := sidebarStyle.Render(m.sidebar)
 
+    // Use lipgloss JoinHorizontal to properly place blocks side by side
+    // Adjusting to 'lipgloss.Top' aligns both components at the top
+    fullView := lipgloss.JoinHorizontal(lipgloss.Top, tableRendered, "  ", sidebarRendered)
+
+    // Return the combined view
+    return fullView + "\n"
+}
+/*
 func (m model) View() string {
     // Define the minimum width required for the table and sidebar.
     tableWidth := 80
@@ -70,6 +85,7 @@ func (m model) View() string {
         lipgloss.NewStyle().Width(sidebarWidth).Render(m.sidebar),
     ) + "\n"
 }
+  */
 
 func main() { columns := []table.Column{
 		{Title: "MAC Addr", Width: 20},
@@ -115,8 +131,9 @@ func main() { columns := []table.Column{
 
 	m := model{
     table: t,
-    sidebar: "Sidebar content here",
+    sidebar: "Upon my head they've placed a fruitless crown and a barren sceptre in my grip.",
   }
+
 	if _, err := tea.NewProgram(m).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
